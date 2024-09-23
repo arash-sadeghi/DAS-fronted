@@ -10,7 +10,7 @@ function App() {
 
   
   useEffect(() => {
-    const socket = io('http://localhost:5000');
+    const socket = io('http://localhost:3009');
     setSocketState(socket);
     socket.on('connect', () => {
         console.log('Connected to WebSocket server!');
@@ -39,11 +39,8 @@ function App() {
             input.onmidimessage = (message) => {
               const data = message.data;
               console.log('MIDI data received:', data);
-
-              // Send MIDI message as JSON via WebSocket
-              if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send(JSON.stringify({ midiData: Array.from(data) }));
-              }
+              console.log("midisent")
+              socket.send(JSON.stringify({ midiData: Array.from(data) }));
             };
             setStatus(`MIDI device connected: ${input.name}`);
             console.log('Listening to MIDI input:', input.name);
