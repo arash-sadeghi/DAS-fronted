@@ -32,6 +32,7 @@ function App() {
     const listenToMIDIDevices = () => {
       if (navigator.requestMIDIAccess) {
         navigator.requestMIDIAccess().then((access) => {
+          console.log('midi access granted');
           const inputs = access.inputs.values();
 
           for (let input of inputs) {
@@ -55,7 +56,7 @@ function App() {
         setStatus('Web MIDI API is not supported by this browser.');
       }
     };
-
+    listenToMIDIDevices();
     return () => {
       socket.off('connect');
       socket.off('message');
