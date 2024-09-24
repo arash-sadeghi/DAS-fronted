@@ -10,15 +10,14 @@ function App() {
 
   
   useEffect(() => {
-    // const socket = io('http://localhost:3009');
-    const backendURL = "http://18.219.112.226:3009"
+    const backendURL = 'http://localhost:3009' 
+    // const backendURL = "http://18.219.112.226:3009"
 
     const socket = io(backendURL);
 
     setSocketState(socket);
     socket.on('connect', () => {
         console.log('Connected to WebSocket server!');
-        socket.send('Hello from React client!');
     });
 
       // Handle incoming messages
@@ -41,10 +40,19 @@ function App() {
 
           for (let input of inputs) {
             input.onmidimessage = (message) => {
-              const data = message.data;
+              const data = Array.from(message.data);
               console.log('MIDI data received:', data);
-              console.log("midisent")
-              socket.send(JSON.stringify({ midiData: Array.from(data) }));
+              var vel = 0
+              if (data.length>2){ //! sometime length of data is two with some wierd control changes. I need to transfer consistent lenght of data
+                vel = data[2];
+              }
+              const mdid_message={
+                type: data[0],
+                note: data[1],
+                velocity: vel
+              };
+
+              socket.send(JSON.stringify(mdid_message));
             };
             setStatus(`MIDI device connected: ${input.name}`);
             console.log('Listening to MIDI input:', input.name);
@@ -78,7 +86,7 @@ function App() {
 
   return (
     <div>
-      <h1>WebSocket Client x</h1>
+      <h1>WebSocket Client x pipe test</h1>
       <h2>Messages from Server:</h2>
       <ul>
         {messages.map((msg, index) => (
