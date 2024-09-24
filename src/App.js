@@ -10,7 +10,11 @@ function App() {
 
   
   useEffect(() => {
-    const socket = io('http://localhost:3009');
+    // const socket = io('http://localhost:3009');
+    const backendURL = "http://18.219.112.226:3009"
+
+    const socket = io(backendURL);
+
     setSocketState(socket);
     socket.on('connect', () => {
         console.log('Connected to WebSocket server!');
