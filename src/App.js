@@ -78,7 +78,7 @@ function App() {
 
   return (
     <div>
-      <h1>WebSocket Client</h1>
+      <h1>WebSocket Client x</h1>
       <h2>Messages from Server:</h2>
       <ul>
         {messages.map((msg, index) => (
