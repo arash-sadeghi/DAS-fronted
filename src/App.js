@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
+import Tabs from './Tabs';
+import OfflineForm from './OfflineForm';
+import RealtimeForm from './RealtimeForm';
+import './App.css';
 
 
 function App() {
@@ -10,8 +14,7 @@ function App() {
 
   
   useEffect(() => {
-    const backendURL = 'http://localhost:3009' 
-    // const backendURL = "http://18.219.112.226:3009"
+    const backendURL = process.env.REACT_APP_BACKEND_URL;
 
     const socket = io(backendURL);
 
@@ -83,27 +86,33 @@ function App() {
     }
   };
 
+  const [activeTab, setActiveTab] = useState('offline');
+
+  const handleTabClick = (tab) => {
+    setActiveTab(tab);
+  };
 
   return (
-    <div>
-      <h1>WebSocket Client x pipe test 2 </h1>
-      <h2>Messages from Server:</h2>
-      <ul>
-        {messages.map((msg, index) => (
-            <li key={index}>{msg}</li>
-        ))}
-      </ul>
-      <form onSubmit={sendMessage}>
-        <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message here..."
-        />
-        <button type="submit">Send</button>
-      </form>
+    <div className="container">
+      <h1 id="title">Drum Generator for Your Bass Track</h1>
+      <Tabs activeTab={activeTab} onTabClick={handleTabClick} />
+      {activeTab === 'offline' ? <OfflineForm /> : <RealtimeForm />}
     </div>
   );
 }
 
 export default App;
+
+{/* <ul>
+  {messages.map((msg, index) => (
+    <li key={index}>{msg}</li>
+    ))}
+    </ul>
+    <form onSubmit={sendMessage}>
+    <input
+    type="text"
+    value={input}
+    onChange={(e) => setInput(e.target.value)}
+    placeholder="Type your message here..."
+    </form>
+/> */}
