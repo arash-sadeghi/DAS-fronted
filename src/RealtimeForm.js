@@ -4,75 +4,132 @@ import { io } from 'socket.io-client';
 
 const RealtimeForm = () => {
     const [midiPorts, setMidiPorts] = useState([]);
-    const [selectedPort, setSelectedPort] = useState('');
+    const [selectedPortIn, setSelectedPortIn] = useState('');
+    const [selectedPortOut, setSelectedPortOut] = useState('');
 	const [isRunning, setIsRunning] = useState(false);
 	const [socketState, setSocketState] = useState(null);
+	const [midiAccess, setMidiAccess] = useState(null);
 
-    useEffect(() => {
-		const backendURL = process.env.REACT_APP_BACKEND_URL+'/realtime';
-		console.log("xxbackendURL",backendURL);
-		const socket = io(backendURL);
-	
-		socket.on('connect', () => {
-			console.log('Connected to WebSocket server!');
-		});
-	
-		  // Handle incoming messages
-		socket.on('message', (data) => {
-		  console.log('Message from server:', data);
-		});
-	
-		  // Handle disconnection
-		socket.on('disconnect', () => {
-		  console.log('Disconnected from server');
-		});
+  useEffect(() => {
+	console.log('refreshing ws' , midiAccess)
+    const socket = io(process.env.REACT_APP_BACKEND_URL);
+    setSocketState(socket);
+    socket.on('connect', () => {
+        console.log('connected to ',process.env.REACT_APP_BACKEND_URL);
+    });
 
-		socket.on('error', () => {
-			console.log('Disconnected from server');
-		});	
+	socket.on('message', (data) => {
+        console.log('message came');
+      handleIncomingMidiMessage(data);
+    });
 
-		const listenToMIDIDevices = () => {
-			if (navigator.requestMIDIAccess) {
-				navigator.requestMIDIAccess().then((access) => {
-				console.log('midi access granted');
-				const inputs = access.inputs.values();
-				console.log("midi inputs", inputs);
-				const ports = [];
-				for (let input of inputs) {
-					ports.push(input.name); // Collect MIDI input port names
-					console.log(">",input);
-				}
-				setMidiPorts(ports);
-				setSelectedPort(ports[0]); //! set default selected port to first port
-			}).catch((err) => {
-					console.error('MIDI access request failed:', err);
-					console.log('MIDI access request failed');
-				});
-			} else {
-				console.log('Web MIDI API is not supported by this browser.');
-			}
+    return () => {
+      if (socket) socket.disconnect();
+    };
+  }, []);
+
+  useEffect(()=>{
+	console.log('refreshing midi' , midiAccess)
+	const initMIDI = async () => {
+		try {
+		  const access = await navigator.requestMIDIAccess();
+		  setMidiAccess(access);
+  
+		  // Get available MIDI output ports
+		  const outputs = Array.from(access.outputs.values());
+		  setMidiPorts(outputs);
+		  // setSelectedPortOut(outputs.length > 0 ? outputs[0].id : '');
+  
+		  access.onstatechange = updateMIDIOutputs; // Detect connection/disconnection of MIDI devices
+		} catch (err) {
+		  console.error('MIDI access request failed:', err);
 		}
-		listenToMIDIDevices();
-		setSocketState(socket);
-	}, []);
+	  };
+  
+	  const updateMIDIOutputs = () => {
+		const outputs = Array.from(midiAccess.outputs.values());
+		setMidiPorts(outputs);
+	  };
+  
+	  initMIDI();
+  },[midiAccess]);
 
-	const handlePortChange = (e) => {
-		setSelectedPort(e.target.value);
+	const handlePortChangeOut = (e) => {
+	setSelectedPortOut(e.target.value);
+	};
+
+	const handlePortChangeIn = (e) => {
+		setSelectedPortIn(e.target.value);
+	};
+
+	const handleIncomingMidiMessage = (data) => {
+		if (!selectedPortOut || !midiAccess) {
+		  console.log('No MIDI output port selected',selectedPortOut , midiAccess);
+		  return;
+		}
+	
+		const selectedOutputPort = midiAccess.outputs.get(selectedPortOut);
+	
+		if (!selectedOutputPort) {
+		  console.error('Selected MIDI output port not found');
+		  return;
+		}
+	
+		try {
+		//   const midiMessages = JSON.parse(data); // Parse MIDI message from the server
+	
+			console.log("data",data)
+		  //   midiMessages.forEach(message => {
+		//     const midiMessage = [
+		//       message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
+		//       message.note,
+		//       message.velocity,
+		//     ];
+		//     console.log('Sending MIDI message:', midiMessage);
+		//     selectedOutputPort.send(midiMessage); // Send MIDI message to the selected port
+		//   });
+		} catch (error) {
+		  console.error('Error handling incoming MIDI message:', error);
+		}
 	  };
 
-	  const startStreamingMidi = async () => {
-        setIsRunning(true);
-        document.getElementById('message').style.display = 'block';
-        document.getElementById('message').innerHTML = 'Real-time processing started!';
+	// const startPublishingMidi = async (data , midiPorts) => {
+	// 		console.log("xx<<<<<<<<<<<","selectedPortOut" ,selectedPortOut , "ports" , midiPorts , "midiAccess", midiAccess)
+	// 		if (selectedPortOut) {
+	// 			const selectedOutputPORT = Array.from(midiAccess.outputs.values()).find(output => output.name === selectedPortOut);
+	// 			try {
+	// 				const midiMessages = JSON.parse(data);
+					
+	// 				  midiMessages.forEach(message => {
+	// 					const midiMessage = [
+	// 					  message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
+	// 					  message.note,
+	// 					  message.velocity,
+	// 					];
+	// 					console.log('Sending MIDI message:', midiMessage);
+	// 					selectedOutputPORT.send(midiMessage); // Send MIDI message
+	// 				  });
+	// 			  } catch (error) {
+	// 				console.error('Error parsing MIDI messages:', error);
+	// 			  }
+	// 		}else {
+	// 			console.error('Selected MIDI out port not found');
+	// 		}
+	// }
 
-		if (selectedPort) {
-		  try {
-			console.log("streaming: ",selectedPort)
 
-			// Access the MIDI inputs and stream MIDI messages asynchronously
-			const access = await navigator.requestMIDIAccess();
-			const selectedInput = Array.from(access.inputs.values()).find(input => input.name === selectedPort);
-	
+	const startStreamingMidi = async () => {
+		setIsRunning(true);
+		document.getElementById('message').style.display = 'block';
+		document.getElementById('message').innerHTML = 'Real-time processing started!';
+
+		if (selectedPortIn) {
+			try {
+			console.log("streaming: ",selectedPortIn)
+
+			const selectedInput = Array.from(midiAccess.inputs.values()).find(input => input.name === selectedPortIn);
+			console.log(">>>>>>>>>>","selectedPortIn" ,selectedPortIn, "selectedInput" , selectedInput , "ports" , midiPorts)
+			
 			if (selectedInput) {
 
 				socketState.send(JSON.stringify({action: 'Start'}));
@@ -81,7 +138,7 @@ const RealtimeForm = () => {
 				const data = Array.from(message.data);  // Convert MIDI message to array
 					var vel = 0
 					if (data.length>2){ //! sometime length of data is two with some wierd control changes. I need to transfer consistent lenght of data
-					  vel = data[2];
+						vel = data[2];
 					}
 
 					let type = '';
@@ -106,22 +163,19 @@ const RealtimeForm = () => {
 						velocity: vel,
 						time: now.getTime() / 1000
 						};
-					console.log('sending',midi_message)
 					socketState.send(JSON.stringify(midi_message));
 				// }
-			  };
+				};
 			} else {
-			  console.error('Selected MIDI port not found');
+				console.error('Selected MIDI port not found');
 			}
-		  } catch (error) {
+			} catch (error) {
 			console.error('Error streaming MIDI messages:', error);
-		  }
+			}
 		} else {
-		  console.error('No MIDI port selected');
+		console.error('No MIDI port selected');
 		}
-	  };
-
-
+	};
 
 	const stopRealTime = () => {
 		setIsRunning(false);
@@ -136,24 +190,40 @@ const RealtimeForm = () => {
 		<h1>Real-time</h1>
 		<form id="realtime-form">
 			<div>
-				<select name="midiin" id="midiin" value={selectedPort} onChange={handlePortChange} required>
+				<label>MIDI Input Port:</label>
+				<select name="midiin" id="midiin"  onChange={handlePortChangeIn} value={selectedPortIn} required>
 					{midiPorts.length > 0 ? (
-					midiPorts.map((port, index) => (
-						<option key={index} value={port}>
-						{port}
+						midiPorts.map((port) => (
+						<option key={port.id} value={port.id}>
+							{port.name}
 						</option>
-					))
+						))
 					) : (
-					<option value="">No MIDI ports available</option>
+						<option value="">No MIDI in ports available</option>
 					)}
-				</select>
-			</div>
+					</select>
+				</div>
+				<div>	
+					<label>MIDI Output Port:</label>
+					<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
+					{midiPorts.length > 0 ? (
+						midiPorts.map((port) => (
+						<option key={port.id} value={port.id}>
+							{port.name}
+						</option>
+						))
+					) : (
+						<option value="">No MIDI output ports available</option>
+					)}
+					</select>
+				</div>
+
 			<button type="button" onClick={startStreamingMidi} className="button" disabled={isRunning}>Start</button>
 			<button type="button" onClick={stopRealTime} className="button" disabled={!isRunning}>Stop</button>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>
 		</div>
-  );
+  	);
 };
 
 export default RealtimeForm;
