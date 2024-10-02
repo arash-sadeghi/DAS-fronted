@@ -13,10 +13,10 @@ const OfflineForm = () => {
           <label htmlFor="file">Choose a file</label>
           <input type="file" name="file" id="file" className="inputfile" required />
         </div>
-        <div className="checkbox-container">
+        {/* <div className="checkbox-container">
           <input type="checkbox" id="assign-velocity" name="assign-velocity" />
           <label htmlFor="assign-velocity">Assign Velocity to Drum Track</label>
-        </div>
+        </div> */}
         <button type="submit" className="button">Submit</button>
       </form>
     </div>

@@ -13,7 +13,17 @@ const RealtimeForm = () => {
 	const midiAccessRef = useRef(null);  
 	const selectedPortOutRef = useRef(null);
 
-  useEffect(() => {
+    const midiMessageQueue = useRef([]); // **Added queue**
+
+    // Process incoming MIDI messages from the queue asynchronously
+    const processMidiQueue = async () => {
+        while (midiMessageQueue.current.length > 0) {
+            const data = midiMessageQueue.current.shift(); // Get the first message
+            await handleIncomingMidiMessage(data); // Process the message
+        }
+    };
+
+	useEffect(() => {
 	console.log('refreshing ws' , midiAccess)
     const socket = io(process.env.REACT_APP_BACKEND_URL+'/realtime');
     setSocketState(socket);
@@ -22,8 +32,9 @@ const RealtimeForm = () => {
     });
 
 	socket.on('server_message', (data) => {
-      handleIncomingMidiMessage(data);
-    });
+		midiMessageQueue.current.push(data); // **Enqueue the data**
+		processMidiQueue(); // **Start processing the queue**
+	});
 
     return () => {
       if (socket) socket.disconnect();
@@ -66,7 +77,7 @@ const RealtimeForm = () => {
 		setSelectedPortIn(e.target.value);
 	};
 
-	const handleIncomingMidiMessage = (data) => {
+	const handleIncomingMidiMessage = async (data) => {
 		let access = midiAccessRef.current;
 		let selectedPortOutFromRef =  selectedPortOutRef.current
 		if (!selectedPortOutFromRef || !access) {
@@ -74,9 +85,7 @@ const RealtimeForm = () => {
 		  return;
 		}
 		const selectedOutputPort = access.outputs.get(selectedPortOutFromRef);
-		console.log('YYEEEEESSS MIDI output port selected',selectedPortOutFromRef , midiAccess, "ref", access , selectedOutputPort);
-		// return
-	
+
 		if (!selectedOutputPort) {
 		  console.error('Selected MIDI output port not found');
 		  return;
@@ -99,31 +108,6 @@ const RealtimeForm = () => {
 		  console.error('Error handling incoming MIDI message:', error);
 		}
 	  };
-
-	// const startPublishingMidi = async (data , midiPorts) => {
-	// 		console.log("xx<<<<<<<<<<<","selectedPortOut" ,selectedPortOut , "ports" , midiPorts , "midiAccess", midiAccess)
-	// 		if (selectedPortOut) {
-	// 			const selectedOutputPORT = Array.from(midiAccess.outputs.values()).find(output => output.name === selectedPortOut);
-	// 			try {
-	// 				const midiMessages = JSON.parse(data);
-					
-	// 				  midiMessages.forEach(message => {
-	// 					const midiMessage = [
-	// 					  message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
-	// 					  message.note,
-	// 					  message.velocity,
-	// 					];
-	// 					console.log('Sending MIDI message:', midiMessage);
-	// 					selectedOutputPORT.send(midiMessage); // Send MIDI message
-	// 				  });
-	// 			  } catch (error) {
-	// 				console.error('Error parsing MIDI messages:', error);
-	// 			  }
-	// 		}else {
-	// 			console.error('Selected MIDI out port not found');
-	// 		}
-	// }
-
 
 	const startStreamingMidi = async () => {
 		setIsRunning(true);
