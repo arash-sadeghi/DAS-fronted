@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 
 
@@ -10,6 +10,8 @@ const RealtimeForm = () => {
 	const [socketState, setSocketState] = useState(null);
 	const [midiAccess, setMidiAccess] = useState(null);
 
+	const midiAccessRef = useRef(null);  
+
   useEffect(() => {
 	console.log('refreshing ws' , midiAccess)
     const socket = io(process.env.REACT_APP_BACKEND_URL);
@@ -19,7 +21,6 @@ const RealtimeForm = () => {
     });
 
 	socket.on('message', (data) => {
-        console.log('message came');
       handleIncomingMidiMessage(data);
     });
 
@@ -28,14 +29,14 @@ const RealtimeForm = () => {
     };
   }, []);
 
-  useEffect(()=>{
+
+  useEffect( ()=>{
 	console.log('refreshing midi' , midiAccess)
 	const initMIDI = async () => {
 		try {
 		  const access = await navigator.requestMIDIAccess();
 		  setMidiAccess(access);
-  
-		  // Get available MIDI output ports
+		  midiAccessRef.current = access; 
 		  const outputs = Array.from(access.outputs.values());
 		  setMidiPorts(outputs);
 		  // setSelectedPortOut(outputs.length > 0 ? outputs[0].id : '');
@@ -51,11 +52,12 @@ const RealtimeForm = () => {
 		setMidiPorts(outputs);
 	  };
   
-	  initMIDI();
-  },[midiAccess]);
+	   initMIDI();
+  },[]);
+
 
 	const handlePortChangeOut = (e) => {
-	setSelectedPortOut(e.target.value);
+		setSelectedPortOut(e.target.value);
 	};
 
 	const handlePortChangeIn = (e) => {
@@ -64,9 +66,11 @@ const RealtimeForm = () => {
 
 	const handleIncomingMidiMessage = (data) => {
 		if (!selectedPortOut || !midiAccess) {
-		  console.log('No MIDI output port selected',selectedPortOut , midiAccess);
+		  console.log('No MIDI output port selected',selectedPortOut , midiAccess , midiPorts  , "ref", midiAccessRef.current);
 		  return;
 		}
+		console.log('YYEEEEESSS MIDI output port selected',selectedPortOut , midiAccess, "ref", midiAccessRef.current);
+		return
 	
 		const selectedOutputPort = midiAccess.outputs.get(selectedPortOut);
 	
