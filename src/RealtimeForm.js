@@ -14,32 +14,35 @@ const RealtimeForm = () => {
 	const selectedPortOutRef = useRef(null);
 
     const midiMessageQueue = useRef([]); // **Added queue**
-
+	const isPublishinggMidi = useRef(false); // **Added queue**
     // Process incoming MIDI messages from the queue asynchronously
+	let batchCounter = 0;
     const processMidiQueue = async () => {
-        while (midiMessageQueue.current.length > 0) {
-            const data = midiMessageQueue.current.shift(); // Get the first message
-            await handleIncomingMidiMessage(data); // Process the message
-        }
+        if (midiMessageQueue.current.length > 0 && !isPublishinggMidi.current) {
+            const data = midiMessageQueue.current.shift(); 
+            await handleIncomingMidiMessage(data); 
+        } else {
+			console.log("publishing in progress or midi data queue is empty")
+		}
     };
 
 	useEffect(() => {
-	console.log('refreshing ws' , midiAccess)
-    const socket = io(process.env.REACT_APP_BACKEND_URL+'/realtime');
-    setSocketState(socket);
-    socket.on('connect', () => {
-        console.log('connected to ',process.env.REACT_APP_BACKEND_URL);
-    });
+		console.log('refreshing ws' , midiAccess)
+		const socket = io(process.env.REACT_APP_BACKEND_URL+'/realtime');
+		setSocketState(socket);
+		socket.on('connect', () => {
+			console.log('connected to ',process.env.REACT_APP_BACKEND_URL);
+		});
 
-	socket.on('server_message', (data) => {
-		midiMessageQueue.current.push(data); // **Enqueue the data**
-		processMidiQueue(); // **Start processing the queue**
-	});
+		socket.on('server_message', (data) => {
+			midiMessageQueue.current.push(data); // **Enqueue the data**
+			processMidiQueue(); // **Start processing the queue**
+		});
 
-    return () => {
-      if (socket) socket.disconnect();
-    };
-  }, []);
+		return () => {
+		if (socket) socket.disconnect();
+		};
+	}, []);
 
   useEffect( ()=>{
 	console.log('refreshing midi , selectedPortOut' , selectedPortOut)
@@ -68,16 +71,23 @@ const RealtimeForm = () => {
 
 
 	const handlePortChangeOut = (e) => {
+		console.log('selectedPortOut was',selectedPortOut , '<selectedPortOutRef.current>', selectedPortOutRef.current);
 		setSelectedPortOut(e.target.value);
-		selectedPortOutRef.current = e.target.value
-		console.log('selectedPortOut changed to ',selectedPortOut , '<>', selectedPortOutRef.current , '<>' ,  e.target.value)
+		selectedPortOutRef.current = e.target.value;
+		console.log('selectedPortOut changed to selectedPortOut',selectedPortOut , '<selectedPortOutRef.current>', selectedPortOutRef.current , '<e.target.value>' ,  e.target.value);
 	};
 
 	const handlePortChangeIn = (e) => {
 		setSelectedPortIn(e.target.value);
 	};
 
+	const getTime = () =>{
+		const now = new Date();
+		return now.getTime()/1000;
+	}
+
 	const handleIncomingMidiMessage = async (data) => {
+		isPublishinggMidi.current = true
 		let access = midiAccessRef.current;
 		let selectedPortOutFromRef =  selectedPortOutRef.current
 		if (!selectedPortOutFromRef || !access) {
@@ -90,24 +100,52 @@ const RealtimeForm = () => {
 		  console.error('Selected MIDI output port not found');
 		  return;
 		}
+
+		batchCounter ++;
 	
 		try {
-			console.log("in try out" , data);
-		  	const midiMessages = data; 
-			console.log("data",data)
-			midiMessages.forEach(message => {
-				const midiMessage = [
-					message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
-					message.note,
-					message.velocity,
-				];
-		    	console.log('Sending MIDI message:', midiMessage);
-		   		selectedOutputPort.send(midiMessage); // Send MIDI message to the selected port
-		  	});
+			const start = getTime();
+			let messageCounter = 0;
+			const sendNextMessage = () => {
+				if (messageCounter >= data.length) {
+					console.log("----------  publishing batch finished");
+					isPublishinggMidi.current = false
+					processNext();
+					return;  // All messages have been sent
+				}
+		
+				const passedTime = getTime() - start;
+				const message = data[messageCounter];
+		
+				if (message.time - passedTime <= 0.001) {
+					messageCounter++;
+					const midiMessage = [
+						message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
+						message.note,
+						message.velocity,
+					];
+					console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef);
+					selectedOutputPort.send(midiMessage);
+				}
+		
+				// Schedule the next message send attempt
+				setTimeout(sendNextMessage, 1);  // Adjust the interval if needed
+			};
+		
+			// Start sending the first message
+			sendNextMessage();
+
 		} catch (error) {
 		  console.error('Error handling incoming MIDI message:', error);
 		}
 	  };
+
+	const processNext = () => {
+		if (midiMessageQueue.current.length > 0 && !isPublishinggMidi.current) {
+            const data = midiMessageQueue.current.shift(); 
+			handleIncomingMidiMessage(data); // Call logMessages for the next request
+		}
+	};
 
 	const startStreamingMidi = async () => {
 		setIsRunning(true);

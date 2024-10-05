@@ -1,109 +1,55 @@
 import React, { useEffect, useState } from 'react';
-import { io } from 'socket.io-client';
 
-const RealtimeMidi = () => {
-  const [midiPorts, setMidiPorts] = useState([]);
-  const [selectedPortOut, setSelectedPortOut] = useState('');
-  const [midiAccess, setMidiAccess] = useState(null);
-  const [socket, setSocket] = useState(null);
+const LogStrings = () => {
+  const stringsWithTimings = [
+    { text: 'First message', time: 1 },   // Log after 1 second
+    { text: 'Second message', time: 2 },  // Log after 2 seconds
+    { text: 'Third message', time: 3 },   // Log after 3 seconds
+  ];
 
-  // Request MIDI access and set up the ports
-  useEffect(() => {
-    const initMIDI = async () => {
-      try {
-        const access = await navigator.requestMIDIAccess();
-        setMidiAccess(access);
+  const [isLogging, setIsLogging] = useState(false); // State to track if logging is in progress
+  const [queue, setQueue] = useState([]); // Queue to hold logging requests
 
-        // Get available MIDI output ports
-        const outputs = Array.from(access.outputs.values());
-        setMidiPorts(outputs);
-        setSelectedPortOut(outputs.length > 0 ? outputs[0].id : '');
-
-        access.onstatechange = updateMIDIOutputs; // Detect connection/disconnection of MIDI devices
-      } catch (err) {
-        console.error('MIDI access request failed:', err);
-      }
-    };
-
-    const updateMIDIOutputs = () => {
-      const outputs = Array.from(midiAccess.outputs.values());
-      setMidiPorts(outputs);
-    };
-
-    initMIDI();
-
-    // Setup WebSocket connection to listen to MIDI messages from the server
-    const socket = io(process.env.REACT_APP_BACKEND_URL);
-    setSocket(socket);
-
-    // Listen for incoming MIDI messages from the server
-    socket.on('message', (data) => {
-        console.log('message came');
-      handleIncomingMidiMessage(data);
+  // Function to create a delay
+  const delay = (duration) => {
+    return new Promise((resolve) => {
+      setTimeout(resolve, duration * 1000); // Convert seconds to milliseconds
     });
-
-    return () => {
-      if (socket) socket.disconnect();
-    };
-  }, [midiAccess]);
-
-  const handlePortChangeOut = (e) => {
-    setSelectedPortOut(e.target.value);
   };
 
-  const handleIncomingMidiMessage = (data) => {
-    if (!selectedPortOut || !midiAccess) {
-      console.error('No MIDI output port selected');
-      return;
+  const logMessages = async () => {
+    setIsLogging(true); // Set logging to true
+    for (const { text, time } of stringsWithTimings) {
+      await delay(time); // Wait for the specified time
+      console.log(text); // Log the message
     }
+    setIsLogging(false); // Reset logging status after completion
+    processNext(); // Process the next item in the queue if any
+  };
 
-    const selectedOutputPort = midiAccess.outputs.get(selectedPortOut);
-
-    if (!selectedOutputPort) {
-      console.error('Selected MIDI output port not found');
-      return;
+  const processNext = () => {
+    if (queue.length > 0 && !isLogging) {
+      const nextLog = queue.shift(); // Get the next logging request
+      logMessages(); // Call logMessages for the next request
     }
+  };
 
-    try {
-    //   const midiMessages = JSON.parse(data); // Parse MIDI message from the server
-
-        console.log("data",data)
-      //   midiMessages.forEach(message => {
-    //     const midiMessage = [
-    //       message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
-    //       message.note,
-    //       message.velocity,
-    //     ];
-    //     console.log('Sending MIDI message:', midiMessage);
-    //     selectedOutputPort.send(midiMessage); // Send MIDI message to the selected port
-    //   });
-    } catch (error) {
-      console.error('Error handling incoming MIDI message:', error);
+  const handleLogButtonClick = () => {
+    setQueue((prevQueue) => [...prevQueue, {}]); // Add a new request to the queue
+    if (!isLogging) {
+      logMessages(); // Start logging if not already in progress
     }
   };
 
   return (
-    <div className="realtime-midi">
-      <h1>Real-time MIDI</h1>
-
-      <div>
-        <label>MIDI Output Port:</label>
-        <select onChange={handlePortChangeOut} value={selectedPortOut}>
-          {midiPorts.length > 0 ? (
-            midiPorts.map((port) => (
-              <option key={port.id} value={port.id}>
-                {port.name}
-              </option>
-            ))
-          ) : (
-            <option value="">No MIDI output ports available</option>
-          )}
-        </select>
-      </div>
-
-      <p>Listening for MIDI messages from the server and sending them to the selected MIDI output...</p>
+    <div>
+      <h1>Logging Messages</h1>
+      <button onClick={handleLogButtonClick}>
+        {isLogging ? 'Logging in progress...' : 'Log Messages'}
+      </button>
+      <p>Check the console for logged messages.</p>
     </div>
   );
 };
 
-export default RealtimeMidi;
+export default LogStrings;
