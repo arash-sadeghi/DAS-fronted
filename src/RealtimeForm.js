@@ -224,7 +224,7 @@ const RealtimeForm = () => {
 
  	return (
 		<div className="tab-content">
-		<h1>Real-time</h1>
+		<h1>Real-time Improv</h1>
 		<form id="realtime-form">
 			<div>
 				<label>MIDI Input Port:</label>
