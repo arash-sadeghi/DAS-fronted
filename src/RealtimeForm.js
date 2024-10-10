@@ -225,6 +225,7 @@ const RealtimeForm = () => {
  	return (
 		<div className="tab-content">
 		<h1>Real-time Improv</h1>
+		<p>Recommended browser is Chrome and recommended OS is OSX</p>
 		<form id="realtime-form">
 			<div>
 				<label>MIDI Input Port:</label>
