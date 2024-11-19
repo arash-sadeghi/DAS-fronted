@@ -52,7 +52,7 @@ const PublishResultMidi = async (data , dependencies) => {
                     message.note,
                     message.velocity,
                 ];
-                console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef);
+                console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", dependencies.selectedChannelOut);
                 selectedOutputPort.send(midiMessage);
             }
     

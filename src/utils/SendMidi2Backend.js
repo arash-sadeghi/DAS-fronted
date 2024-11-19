@@ -19,7 +19,7 @@ export const sendMidi2Backend = async (dependencies) => {
         portIn = dependencies.selectedPortIn;
     }
 
-    console.log("streaming: ",dependencies.selectedPortIn , portIn , "channel" , dependencies.selectedChannel)
+    console.log("streaming: ",dependencies.selectedPortIn , portIn , "channel" , dependencies.selectedChannelIn)
     if (portIn) {
         try {
         const selectedInput = Array.from(dependencies.midiAccess.inputs.values()).find(input => input.name === portIn);
