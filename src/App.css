@@ -68,6 +68,18 @@ select {
 
 }
 
+input {
+  padding: 5px;
+  border: 1px solid #cccc;
+  border-radius: 40px;
+  align-items: center;
+  box-sizing: border-box; /* Include padding within the width */
+  font-size: 20px; /* Set the font size for the input text */
+  width: 90px; /* Adjust width as needed */
+  justify-content: center; /* Center elements horizontally */
+
+}
+
 
 /* Style the custom button */
 .file-input-container label {

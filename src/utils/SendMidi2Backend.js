@@ -19,16 +19,21 @@ export const sendMidi2Backend = async (dependencies) => {
         portIn = dependencies.selectedPortIn;
     }
 
-    console.log("streaming: ",dependencies.selectedPortIn , portIn)
+    console.log("streaming: ",dependencies.selectedPortIn , portIn , "channel" , dependencies.selectedChannel)
     if (portIn) {
         try {
         const selectedInput = Array.from(dependencies.midiAccess.inputs.values()).find(input => input.name === portIn);
         console.log(">>>>>>>>>>","portIn" ,portIn, "selectedInput" , selectedInput , "ports" , dependencies.midiPorts , 'access',dependencies.midiAccess, Array.from(dependencies.midiAccess.inputs.values()) )
-        if (selectedInput) {
+        if (selectedInput ) {
 
             dependencies.socketState.send(JSON.stringify({action: 'Start'}));
             selectedInput.onmidimessage = (message) => {
                 const data = Array.from(message.data);  // Convert MIDI message to array
+                let channel = getMidiChannel(data[0]);
+                if(channel != dependencies.selectedChannelIn){
+                    // console.log('[-] recieved message is', channel,' not in desired chanel',dependencies.selectedChannel);
+                    return;
+                }
                 var vel = 0
                 if (data.length>2){ //! sometime length of data is two with some wierd control changes. I need to transfer consistent lenght of data
                     vel = data[2];
@@ -52,7 +57,7 @@ export const sendMidi2Backend = async (dependencies) => {
                 const midi_message={
                     action: "Process",
                     type: type,
-                    channel: getMidiChannel(data[0]),
+                    channel: channel,
                     note: data[1],
                     velocity: vel,
                     time: now.getTime() / 1000

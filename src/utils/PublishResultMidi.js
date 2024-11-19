@@ -48,7 +48,7 @@ const PublishResultMidi = async (data , dependencies) => {
             if (message.time - passedTime <= 0.001) {
                 messageCounter++;
                 const midiMessage = [
-                    message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
+                    message.type === 'note_on' ? 0x90+ (dependencies.selectedChannelOut - 1) : 0x80+ (dependencies.selectedChannelOut - 1), // Note On or Note Off
                     message.note,
                     message.velocity,
                 ];

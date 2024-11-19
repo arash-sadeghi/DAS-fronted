@@ -2,7 +2,8 @@ import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { processResultMidiQueue } from '../utils/PublishResultMidi';
 import {sendMidi2Backend} from '../utils/SendMidi2Backend';
-
+import SelectMidiChannelIn from './MidiChannelIn'
+import SelectMidiChannelOut from './MidiChannelOut'
 
 const RealtimeForm = () => {
     const [midiPorts, setMidiPorts] = useState([]);
@@ -12,6 +13,8 @@ const RealtimeForm = () => {
 	const [socketState, setSocketState] = useState(null);
 	const [midiAccess, setMidiAccess] = useState(null);
 
+	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
+	const [selectedChannelOut, setSelectedChannelOut] = useState(10);
 	const midiAccessRef = useRef(null);  
 	const selectedPortOutRef = useRef(null);
 
@@ -26,8 +29,19 @@ const RealtimeForm = () => {
 		'midiPorts' : midiPorts,
 		'midiAccessRef' : midiAccessRef,
 		'midiMessageQueue' : midiMessageQueue,	  
+		'selectedChannelOut' : selectedChannelOut,
+	};
+	
+
+	const handleChannelChangeIn = (channel) => {
+	  setSelectedChannelIn(channel);
+	  console.log("Selected MIDI Channel:", channel);
 	};
 
+	const handleChannelChangeOut = (channel) => {
+		setSelectedChannelOut(channel);
+		console.log("Selected MIDI Channel:", channel);
+	};
 
 
 	useEffect(() => {
@@ -93,6 +107,7 @@ const RealtimeForm = () => {
 			'midiAccess' : midiAccess ,
 			'midiPorts' : midiPorts ,
 			'socketState' : socketState ,
+			'selectedChannelIn' : selectedChannelIn,
 		};
 		sendMidi2Backend(sendMidi2BackendDependencies);
 	};
@@ -123,6 +138,8 @@ const RealtimeForm = () => {
 						<option value="">No MIDI in ports available</option>
 					)}
 				</select>
+				<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
+				{<p>Current MIDI In Channel: {selectedChannelIn}</p>}
 				</div>
 				<div>	
 					<label>MIDI Output Port:</label>
@@ -137,6 +154,9 @@ const RealtimeForm = () => {
 						<option value="">No MIDI output ports available</option>
 					)}
 					</select>
+				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+				{<p>Current MIDI Out Channel: {selectedChannelOut}</p>}
+
 				</div>
 
 			<button type="button" onClick={startRealtime} className="button" disabled={isRunning}>Start</button> 
