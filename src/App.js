@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Tabs from './Tabs';
-import OfflineForm from './OfflineForm';
-import RealtimeForm from './RealtimeForm';
+import OfflineForm from './components/OfflineForm';
+import RealtimeForm from './components/RealtimeForm';
 import Test from './Test';
 import './App.css';
 
