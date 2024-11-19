@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { processResultMidiQueue } from '../utils/PublishResultMidi';
+
 
 
 const RealtimeForm = () => {
@@ -16,15 +18,15 @@ const RealtimeForm = () => {
     const midiMessageQueue = useRef([]); // **Added queue**
 	const isPublishinggMidi = useRef(false); // **Added queue**
     // Process incoming MIDI messages from the queue asynchronously
-	let batchCounter = 0;
-    const processMidiQueue = async () => {
-        if (midiMessageQueue.current.length > 0 && !isPublishinggMidi.current) {
-            const data = midiMessageQueue.current.shift(); 
-            await handleIncomingMidiMessage(data); 
-        } else {
-			console.log("publishing in progress or midi data queue is empty")
-		}
-    };
+	const midiPublishDependencies = {
+		'isPublishinggMidi': isPublishinggMidi,
+		'midiAccessRef' : midiAccessRef,
+		'selectedPortOutRef' : selectedPortOutRef,
+		'midiAccess' : midiAccess,
+		'midiPorts' : midiPorts,
+		'midiAccessRef' : midiAccessRef,
+		'midiMessageQueue' : midiMessageQueue,	  
+	};
 
 	  // Function to extract the MIDI channel
 	const getMidiChannel = (statusByte) => {
@@ -41,8 +43,9 @@ const RealtimeForm = () => {
 		});
 
 		socket.on('server_message', (data) => {
+			console.log("xxxxxxxxx message recieved from server")
 			midiMessageQueue.current.push(data); // **Enqueue the data**
-			processMidiQueue(); // **Start processing the queue**
+			processResultMidiQueue(midiPublishDependencies); // **Start processing the queue**
 		});
 
 		return () => {
@@ -85,72 +88,6 @@ const RealtimeForm = () => {
 
 	const handlePortChangeIn = (e) => {
 		setSelectedPortIn(e.target.value);
-	};
-
-	const getTime = () =>{
-		const now = new Date();
-		return now.getTime()/1000;
-	}
-
-	const handleIncomingMidiMessage = async (data) => {
-		isPublishinggMidi.current = true
-		let access = midiAccessRef.current;
-		let selectedPortOutFromRef =  selectedPortOutRef.current
-		if (!selectedPortOutFromRef || !access) {
-		  console.log('No MIDI output port selected',selectedPortOutFromRef , midiAccess , midiPorts  , "ref", midiAccessRef.current);
-		  return;
-		}
-		const selectedOutputPort = access.outputs.get(selectedPortOutFromRef);
-
-		if (!selectedOutputPort) {
-		  console.error('Selected MIDI output port not found');
-		  return;
-		}
-
-		batchCounter ++;
-	
-		try {
-			const start = getTime();
-			let messageCounter = 0;
-			const sendNextMessage = () => {
-				if (messageCounter >= data.length) {
-					console.log("----------  publishing batch finished");
-					isPublishinggMidi.current = false
-					processNext();
-					return;  // All messages have been sent
-				}
-		
-				const passedTime = getTime() - start;
-				const message = data[messageCounter];
-		
-				if (message.time - passedTime <= 0.001) {
-					messageCounter++;
-					const midiMessage = [
-						message.type === 'note_on' ? 0x90 : 0x80, // Note On or Note Off
-						message.note,
-						message.velocity,
-					];
-					console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef);
-					selectedOutputPort.send(midiMessage);
-				}
-		
-				// Schedule the next message send attempt
-				setTimeout(sendNextMessage, 1);  // Adjust the interval if needed
-			};
-		
-			// Start sending the first message
-			sendNextMessage();
-
-		} catch (error) {
-		  console.error('Error handling incoming MIDI message:', error);
-		}
-	  };
-
-	const processNext = () => {
-		if (midiMessageQueue.current.length > 0 && !isPublishinggMidi.current) {
-            const data = midiMessageQueue.current.shift(); 
-			handleIncomingMidiMessage(data); // Call logMessages for the next request
-		}
 	};
 
 	const startStreamingMidi = async () => {
@@ -265,7 +202,6 @@ const RealtimeForm = () => {
 				</div>
 
 			<button type="button" onClick={startStreamingMidi} className="button" disabled={isRunning}>Start</button> 
-			{/* <button type="button" onClick={handleIncomingMidiMessage} className="button" disabled={isRunning}>Start</button> */ }
 			<button type="button" onClick={stopRealTime} className="button" disabled={!isRunning}>Stop</button>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>
