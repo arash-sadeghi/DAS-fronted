@@ -26,6 +26,12 @@ const RealtimeForm = () => {
 		}
     };
 
+	  // Function to extract the MIDI channel
+	const getMidiChannel = (statusByte) => {
+		const channel = statusByte & 0x0F; // Extract the last 4 bits
+		return channel + 1; // Convert to 1-indexed channel
+	};
+
 	useEffect(() => {
 		console.log('refreshing ws' , midiAccess)
 		const socket = io(process.env.REACT_APP_BACKEND_URL+'/realtime');
@@ -195,12 +201,14 @@ const RealtimeForm = () => {
 					const midi_message={
 						action: "Process",
 						type: type,
+						channel: getMidiChannel(data[0]),
 						note: data[1],
 						velocity: vel,
 						time: now.getTime() / 1000
 					};
 					// console.log('socket is emmiting to server')
 					socketState.send(JSON.stringify(midi_message));
+					// console.log("sent midi message to server on channel",getMidiChannel(data[0]));
 				// }
 				};
 			} else {
