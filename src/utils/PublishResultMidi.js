@@ -48,11 +48,11 @@ const PublishResultMidi = async (data , dependencies) => {
             if (message.time - passedTime <= 0.001) {
                 messageCounter++;
                 const midiMessage = [
-                    message.type === 'note_on' ? 0x90+ (dependencies.selectedChannelOut - 1) : 0x80+ (dependencies.selectedChannelOut - 1), // Note On or Note Off
+                    message.type === 'note_on' ? 0x90+ (dependencies.selectedChannelOutRef.current - 1) : 0x80+ (dependencies.selectedChannelOutRef.current - 1), // Note On or Note Off
                     message.note,
                     message.velocity,
                 ];
-                console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", dependencies.selectedChannelOut);
+                console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", dependencies.selectedChannelOutRef);
                 selectedOutputPort.send(midiMessage);
             }
     
@@ -64,6 +64,6 @@ const PublishResultMidi = async (data , dependencies) => {
         sendNextMessage();
 
     } catch (error) {
-      console.error('Error handling incoming MIDI message:', error);
+      console.error('[-] Error handling incoming MIDI message:', error);
     }
   };

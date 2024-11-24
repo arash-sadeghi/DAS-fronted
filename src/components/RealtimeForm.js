@@ -15,6 +15,9 @@ const RealtimeForm = () => {
 
 	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
 	const [selectedChannelOut, setSelectedChannelOut] = useState(10);
+	const selectedChannelInRef = useRef(3)
+	const selectedChannelOutRef = useRef(10)
+
 	const midiAccessRef = useRef(null);  
 	const selectedPortOutRef = useRef(null);
 
@@ -29,20 +32,30 @@ const RealtimeForm = () => {
 		'midiPorts' : midiPorts,
 		'midiAccessRef' : midiAccessRef,
 		'midiMessageQueue' : midiMessageQueue,	  
-		'selectedChannelOut' : selectedChannelOut,
+		'selectedChannelOutRef' : selectedChannelOutRef,
+	};
+	const sendMidi2BackendDependencies = {
+		'setIsRunning' : setIsRunning ,
+		'selectedPortIn' : selectedPortIn ,
+		'setSelectedPortIn' : setSelectedPortIn ,
+		'midiAccess' : midiAccess ,
+		'midiPorts' : midiPorts ,
+		'socketState' : socketState ,
+		'selectedChannelInRef' : selectedChannelInRef,
 	};
 	
 
 	const handleChannelChangeIn = (channel) => {
 	  setSelectedChannelIn(channel);
+	  selectedChannelInRef.current = channel;
 	  console.log("Selected MIDI Channel:", channel);
 	};
 
 	const handleChannelChangeOut = (channel) => {
 		setSelectedChannelOut(channel);
+		selectedChannelOutRef.current = channel;
 		console.log("Selected MIDI Channel:", channel);
 	};
-
 
 	useEffect(() => {
 		console.log('refreshing ws' , midiAccess)
@@ -63,30 +76,30 @@ const RealtimeForm = () => {
 		};
 	}, []);
 
-  useEffect( ()=>{
-	console.log('refreshing midi , selectedPortOut' , selectedPortOut)
-	const initMIDI = async () => {
-		try {
-			const access = await navigator.requestMIDIAccess();
-			setMidiAccess(access);
-			midiAccessRef.current = access; 
-			const outputs = Array.from(access.outputs.values());
+	useEffect( ()=>{
+		console.log('refreshing midi , selectedPortOut' , selectedPortOut)
+		const initMIDI = async () => {
+			try {
+				const access = await navigator.requestMIDIAccess();
+				setMidiAccess(access);
+				midiAccessRef.current = access; 
+				const outputs = Array.from(access.outputs.values());
+				setMidiPorts(outputs);
+				setSelectedPortOut(outputs.length > 0 ? outputs[0].id : '');
+				selectedPortOutRef.current = outputs.length > 0 ? outputs[0].id : '';
+				access.onstatechange = updateMIDIOutputs; // Detect connection/disconnection of MIDI devices //TODO throwing error
+			} catch (err) {
+			console.error('MIDI access request failed:', err);
+			}
+		};
+	
+		const updateMIDIOutputs = () => {
+			const outputs = Array.from(midiAccessRef.current.outputs.values());
 			setMidiPorts(outputs);
-			setSelectedPortOut(outputs.length > 0 ? outputs[0].id : '');
-			selectedPortOutRef.current = outputs.length > 0 ? outputs[0].id : '';
-			access.onstatechange = updateMIDIOutputs; // Detect connection/disconnection of MIDI devices //TODO throwing error
-		} catch (err) {
-		  console.error('MIDI access request failed:', err);
-		}
-	  };
-  
-	  const updateMIDIOutputs = () => {
-		const outputs = Array.from(midiAccessRef.current.outputs.values());
-		setMidiPorts(outputs);
-	  };
-  
-	   initMIDI();
-  },[]);
+		};
+	
+		initMIDI();
+	},[]);
 
 	const handlePortChangeOut = (e) => {
 		console.log('selectedPortOut was',selectedPortOut , '<selectedPortOutRef.current>', selectedPortOutRef.current);
@@ -100,15 +113,6 @@ const RealtimeForm = () => {
 	};
 
 	const startRealtime = async () => {
-		const sendMidi2BackendDependencies = {
-			'setIsRunning' : setIsRunning ,
-			'selectedPortIn' : selectedPortIn ,
-			'setSelectedPortIn' : setSelectedPortIn ,
-			'midiAccess' : midiAccess ,
-			'midiPorts' : midiPorts ,
-			'socketState' : socketState ,
-			'selectedChannelIn' : selectedChannelIn,
-		};
 		sendMidi2Backend(sendMidi2BackendDependencies);
 	};
 

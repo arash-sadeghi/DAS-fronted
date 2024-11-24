@@ -19,7 +19,7 @@ export const sendMidi2Backend = async (dependencies) => {
         portIn = dependencies.selectedPortIn;
     }
 
-    console.log("streaming: ",dependencies.selectedPortIn , portIn , "channel" , dependencies.selectedChannelIn)
+    console.log("streaming: ",dependencies.selectedPortIn , portIn , "channel" , dependencies.selectedChannelInRef)
     if (portIn) {
         try {
         const selectedInput = Array.from(dependencies.midiAccess.inputs.values()).find(input => input.name === portIn);
@@ -30,7 +30,7 @@ export const sendMidi2Backend = async (dependencies) => {
             selectedInput.onmidimessage = (message) => {
                 const data = Array.from(message.data);  // Convert MIDI message to array
                 let channel = getMidiChannel(data[0]);
-                if(channel != dependencies.selectedChannelIn){
+                if(channel != dependencies.selectedChannelInRef.current){
                     // console.log('[-] recieved message is', channel,' not in desired chanel',dependencies.selectedChannel);
                     return;
                 }
@@ -64,7 +64,7 @@ export const sendMidi2Backend = async (dependencies) => {
                 };
                 // console.log('socket is emmiting to server')
                 dependencies.socketState.send(JSON.stringify(midi_message));
-                // console.log("sent midi message to server on channel",getMidiChannel(data[0]));
+                // console.log("sent midi message to server on channel", data);
             // }
             };
         } else {
