@@ -61,6 +61,8 @@ form {
   flex-direction: column; /* Stack the controls and log */
   align-items: center; /* Center everything horizontally */
   gap: 20px; /* Add space between controls and log */
+  border: #008CBA solid 3px;
+  border-radius: 10px;
 }
 
 .controls {
@@ -75,7 +77,7 @@ form {
 }
 
 .log-container {
-  width: 60%; /* Optional: Match parent width */
+  width: 40em; /* Optional: Match parent width */
   text-align: center; /* Center align logs inside the container */
   align-items: center; /* Align controls vertically */
 

@@ -54,6 +54,7 @@ const PublishResultMidi = async (data , dependencies) => {
                 ];
                 console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", dependencies.selectedChannelOutRef);
                 selectedOutputPort.send(midiMessage);
+                dependencies.addDrumMessage(JSON.stringify("Generate Drum Midi: " + midiMessage))
             }
     
             // Schedule the next message send attempt

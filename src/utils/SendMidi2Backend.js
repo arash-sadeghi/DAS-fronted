@@ -65,7 +65,6 @@ export const sendMidi2Backend = async (dependencies) => {
                 // console.log('socket is emmiting to server')
                 dependencies.socketState.send(JSON.stringify(midi_message));
                 dependencies.addBassMessage([JSON.stringify(midi_message)]);
-                console.log("sent midi message to server on channel", JSON.stringify(midi_message));
             // }
             };
         } else {

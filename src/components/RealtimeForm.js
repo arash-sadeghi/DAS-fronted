@@ -7,13 +7,16 @@ import SelectMidiChannelOut from './MidiChannelOut'
 import LogViewerBassReceive from "./LogViewerBassReceive";
 
 const RealtimeForm = () => {
+	const meesageLogLimit = 10;
     const [midiPorts, setMidiPorts] = useState([]);
     const [selectedPortIn, setSelectedPortIn] = useState('');
     const [selectedPortOut, setSelectedPortOut] = useState('');
 	const [isRunning, setIsRunning] = useState(false);
 	const [socketState, setSocketState] = useState(null);
 	const [midiAccess, setMidiAccess] = useState(null);
-	const [bassMessages, setBassMessages] = useState(['listening to user MIDI...']);
+	const [bassMessages, setBassMessages] = useState(['Waiting for start button to listen to user MIDI...']);
+	const [drumMessages, setDrumMessages] = useState(['Waiting for start button to make drum for you...']);
+	const drumMessagesRef = useRef(drumMessages);
 
 	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
 	const [selectedChannelOut, setSelectedChannelOut] = useState(10);
@@ -28,7 +31,26 @@ const RealtimeForm = () => {
     // Process incoming MIDI messages from the queue asynchronously
 
 	const addBassMessage = (newMessage) => {
-		setBassMessages((prevMessages) => [...prevMessages, newMessage]);
+		setBassMessages((prevMessages) => {
+			// Add the new message and ensure the log size doesn't exceed 100
+			const updatedMessages = [...prevMessages, newMessage];
+			if (updatedMessages.length > meesageLogLimit) {
+			  updatedMessages.shift(); // Remove the oldest message
+			}
+			return updatedMessages;
+		  });		
+	};
+	const addDrumMessage = (newMessage) => {
+		setDrumMessages((prevMessages) => {
+			// Add the new message and ensure the log size doesn't exceed 100
+			const updatedMessages = [...prevMessages, newMessage];
+			if (updatedMessages.length > meesageLogLimit) {
+			  updatedMessages.shift(); // Remove the oldest message
+			}
+			drumMessagesRef.current  = updatedMessages 
+			return updatedMessages;
+		  });
+		console.log('drum message:' , drumMessages , newMessage , drumMessagesRef.current)
 	};
 
 	const midiPublishDependencies = {
@@ -40,6 +62,7 @@ const RealtimeForm = () => {
 		'midiAccessRef' : midiAccessRef,
 		'midiMessageQueue' : midiMessageQueue,	  
 		'selectedChannelOutRef' : selectedChannelOutRef,
+		'addDrumMessage': addDrumMessage,
 	};
 	const sendMidi2BackendDependencies = {
 		'setIsRunning' : setIsRunning ,
@@ -71,12 +94,24 @@ const RealtimeForm = () => {
 		setSocketState(socket);
 		socket.on('connect', () => {
 			console.log('connected to ',process.env.REACT_APP_BACKEND_URL);
+			addDrumMessage('Connected to DAS server')
 		});
 
-		socket.on('server_message', (data) => {
+		socket.on('drum_midi', (data) => {
 			console.log("xxxxxxxxx message recieved from server")
 			midiMessageQueue.current.push(data); // **Enqueue the data**
 			processResultMidiQueue(midiPublishDependencies); // **Start processing the queue**
+		});
+
+		socket.on('server_status', (data) => {
+				let message = data.status +":"+ data.message;
+				if (drumMessagesRef.current[drumMessagesRef.current.length-1] !== message) // to avoid repeated messages
+					addDrumMessage(message);
+
+		});
+
+		socket.on('disconnect', () => {
+			addDrumMessage("server disconnected");
 		});
 
 		return () => {
@@ -163,21 +198,26 @@ const RealtimeForm = () => {
 					<LogViewerBassReceive messages={bassMessages} />
 				</div>
 			</div>
-			
+
 			<div className='selection-segment'>	
-				<label>MIDI Output Port:</label>
-				<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
-				{midiPorts.length > 0 ? (
-					midiPorts.map((port) => (
-					<option key={port.id} value={port.id}>
-						{port.name}
-					</option>
-					))
-				) : (
-					<option value="">No MIDI output ports available</option>
-				)}
-				</select>
-			<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+				<div className='controls'>
+					<label>MIDI Output Port:</label>
+					<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
+					{midiPorts.length > 0 ? (
+						midiPorts.map((port) => (
+						<option key={port.id} value={port.id}>
+							{port.name}
+						</option>
+						))
+					) : (
+						<option value="">No MIDI output ports available</option>
+					)}
+					</select>
+				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+				</div>
+				<div className="log-container">
+					<LogViewerBassReceive messages={drumMessages} />
+				</div>
 			</div>
 
 			<div id='start-stop-buttons'>
