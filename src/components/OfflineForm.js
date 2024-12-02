@@ -4,7 +4,7 @@ const OfflineForm = () => {
   return (
     <div className="tab-content">
       <p className="subtitle">
-        x Upload a bass track MIDI file and get a drum track. Make sure your bass track is in tempo 100 and rhythm 4/4.
+        Upload a bass track MIDI file and get a drum track. Make sure your bass track is in tempo 100 and rhythm 4/4.
       </p>
       
       <form method="post" action={`${process.env.REACT_APP_BACKEND_URL}/offline`} encType="multipart/form-data">

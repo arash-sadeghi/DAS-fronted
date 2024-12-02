@@ -56,19 +56,29 @@ form {
   padding: 30px;
 }
 
-.selection-segment{
-  
-  border: 2px solid #008CBA;
-  border-radius: 40px;
-  padding: 30px;
-
+.selection-segment {
   display: flex;
-  align-items: center; /* Align items vertically in the center */
-  gap: 10px; /* Add spacing between elements */
+  flex-direction: column; /* Stack the controls and log */
+  align-items: center; /* Center everything horizontally */
+  gap: 20px; /* Add space between controls and log */
 }
 
-.selection-segment label {
-  margin-left: 10px; /* Optional: Add spacing between label and its select */
+.controls {
+  display: flex; /* Arrange controls in a row */
+  align-items: center; /* Align controls vertically */
+  justify-content: center; /* Center controls horizontally */
+  gap: 10px; /* Space between label, select, and input */
+}
+
+.controls label {
+  margin-right: 5px; /* Small space between the label and the select */
+}
+
+.log-container {
+  width: 60%; /* Optional: Match parent width */
+  text-align: center; /* Center align logs inside the container */
+  align-items: center; /* Align controls vertically */
+
 }
 
 #start-stop-buttons{
@@ -220,7 +230,7 @@ label:hover {
   margin-top: 10px;
 
   /* background-color: #fff; */
-  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+  background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent white background */
   border-radius: 10px;
   padding: 30px;
   width: 60%;

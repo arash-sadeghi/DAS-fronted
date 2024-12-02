@@ -4,6 +4,7 @@ import { processResultMidiQueue } from '../utils/PublishResultMidi';
 import {sendMidi2Backend} from '../utils/SendMidi2Backend';
 import SelectMidiChannelIn from './MidiChannelIn'
 import SelectMidiChannelOut from './MidiChannelOut'
+import LogViewerBassReceive from "./LogViewerBassReceive";
 
 const RealtimeForm = () => {
     const [midiPorts, setMidiPorts] = useState([]);
@@ -12,6 +13,7 @@ const RealtimeForm = () => {
 	const [isRunning, setIsRunning] = useState(false);
 	const [socketState, setSocketState] = useState(null);
 	const [midiAccess, setMidiAccess] = useState(null);
+	const [bassMessages, setBassMessages] = useState(['listening to user MIDI...']);
 
 	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
 	const [selectedChannelOut, setSelectedChannelOut] = useState(10);
@@ -24,6 +26,11 @@ const RealtimeForm = () => {
     const midiMessageQueue = useRef([]); // **Added queue**
 	const isPublishinggMidi = useRef(false); // **Added queue**
     // Process incoming MIDI messages from the queue asynchronously
+
+	const addBassMessage = (newMessage) => {
+		setBassMessages((prevMessages) => [...prevMessages, newMessage]);
+	};
+
 	const midiPublishDependencies = {
 		'isPublishinggMidi': isPublishinggMidi,
 		'midiAccessRef' : midiAccessRef,
@@ -42,6 +49,7 @@ const RealtimeForm = () => {
 		'midiPorts' : midiPorts ,
 		'socketState' : socketState ,
 		'selectedChannelInRef' : selectedChannelInRef,
+		'addBassMessage':addBassMessage,
 	};
 	
 
@@ -124,14 +132,21 @@ const RealtimeForm = () => {
 
 	};
 
- 	return (
+	return (
 		<div className="tab-content">
 		<h1>Real-time Improv</h1>
 		<p>Recommended browser is Chrome and recommended OS is OSX</p>
 		<form id="realtime-form">
-			<div className='selection-segment'>
-				<label>MIDI Input Port:</label>
-				<select name="midiin" id="midiin"  onChange={handlePortChangeIn} value={selectedPortIn} required>
+			<div className="selection-segment">
+				<div className="controls">
+					<label>MIDI Input Port:</label>
+					<select
+					name="midiin"
+					id="midiin"
+					onChange={handlePortChangeIn}
+					value={selectedPortIn}
+					required
+					>
 					{midiPorts.length > 0 ? (
 						midiPorts.map((port) => (
 						<option key={port.id} value={port.id}>
@@ -141,24 +156,29 @@ const RealtimeForm = () => {
 					) : (
 						<option value="">No MIDI in ports available</option>
 					)}
-				</select>
-				<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
-				</div>
-				<div className='selection-segment'>	
-					<label>MIDI Output Port:</label>
-					<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
-					{midiPorts.length > 0 ? (
-						midiPorts.map((port) => (
-						<option key={port.id} value={port.id}>
-							{port.name}
-						</option>
-						))
-					) : (
-						<option value="">No MIDI output ports available</option>
-					)}
 					</select>
-				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+					<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
 				</div>
+				<div className="log-container">
+					<LogViewerBassReceive messages={bassMessages} />
+				</div>
+			</div>
+			
+			<div className='selection-segment'>	
+				<label>MIDI Output Port:</label>
+				<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
+				{midiPorts.length > 0 ? (
+					midiPorts.map((port) => (
+					<option key={port.id} value={port.id}>
+						{port.name}
+					</option>
+					))
+				) : (
+					<option value="">No MIDI output ports available</option>
+				)}
+				</select>
+			<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+			</div>
 
 			<div id='start-stop-buttons'>
 				<button type="button" onClick={startRealtime} className="button" disabled={isRunning}>Start</button> 
