@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { processResultMidiQueue } from '../utils/PublishResultMidi';
-import SelectMidiChannelOut from './MidiChannelOut'
+import SelectMidiChannel from './MidiChannel'
 import 'react-piano/dist/styles.css';
 import PianoMidi from './PinaoMidi';
 
@@ -123,7 +123,7 @@ const PianoInteract = () => {
 					<option value="">No MIDI output ports available</option>
 				)}
 				</select>
-				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+				<SelectMidiChannel onChannelChange={handleChannelChangeOut} />
 			</div>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>

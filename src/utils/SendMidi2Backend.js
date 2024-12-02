@@ -30,7 +30,7 @@ export const sendMidi2Backend = async (dependencies) => {
             selectedInput.onmidimessage = (message) => {
                 const data = Array.from(message.data);  // Convert MIDI message to array
                 let channel = getMidiChannel(data[0]);
-                if(channel != dependencies.selectedChannelInRef.current){
+                if(!(channel === dependencies.selectedChannelInRef.current || dependencies.selectedChannelInRef.current === "ALL")){
                     // console.log('[-] recieved message is', channel,' not in desired chanel',dependencies.selectedChannel);
                     return;
                 }

@@ -2,8 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { processResultMidiQueue } from '../utils/PublishResultMidi';
 import {sendMidi2Backend} from '../utils/SendMidi2Backend';
-import SelectMidiChannelIn from './MidiChannelIn'
-import SelectMidiChannelOut from './MidiChannelOut'
+import SelectMidiChannel from './MidiChannel'
 import LogViewerBassReceive from "./LogViewerBassReceive";
 
 const RealtimeForm = () => {
@@ -20,8 +19,8 @@ const RealtimeForm = () => {
 
 	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
 	const [selectedChannelOut, setSelectedChannelOut] = useState(10);
-	const selectedChannelInRef = useRef(3)
-	const selectedChannelOutRef = useRef(10)
+	const selectedChannelInRef = useRef(1)
+	const selectedChannelOutRef = useRef(1)
 
 	const midiAccessRef = useRef(null);  
 	const selectedPortOutRef = useRef(null);
@@ -192,7 +191,7 @@ const RealtimeForm = () => {
 						<option value="">No MIDI in ports available</option>
 					)}
 					</select>
-					<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
+					<SelectMidiChannel onChannelChange={handleChannelChangeIn} />
 				</div>
 				<div className="log-container">
 					<LogViewerBassReceive messages={bassMessages} />
@@ -213,7 +212,7 @@ const RealtimeForm = () => {
 						<option value="">No MIDI output ports available</option>
 					)}
 					</select>
-				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
+				<SelectMidiChannel onChannelChange={handleChannelChangeOut} />
 				</div>
 				<div className="log-container">
 					<LogViewerBassReceive messages={drumMessages} />

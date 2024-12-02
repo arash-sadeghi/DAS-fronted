@@ -53,8 +53,25 @@ const PublishResultMidi = async (data , dependencies) => {
                     message.velocity,
                 ];
                 console.log('Publishing MIDI message. BATCH',batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", dependencies.selectedChannelOutRef);
-                selectedOutputPort.send(midiMessage);
-                dependencies.addDrumMessage(JSON.stringify("Generate Drum Midi: " + midiMessage))
+
+                const sendToChannel = (channel) => {
+                    const midiMessage = [
+                        message.type === 'note_on' ? 0x90 + (channel - 1) : 0x80 + (channel - 1), // Note On or Note Off
+                        message.note,
+                        message.velocity,
+                    ];
+                    console.log('Publishing MIDI message. BATCH', batchCounter, midiMessage, 'to MIDI ports:', selectedPortOutFromRef, "channel", channel);
+                    selectedOutputPort.send(midiMessage);
+                    dependencies.addDrumMessage(JSON.stringify("Generate Drum Midi: " + midiMessage));
+                };
+
+                if (dependencies.selectedChannelOutRef.current === "ALL") {
+                    for (let channel = 1; channel <= 16; channel++) {
+                        sendToChannel(channel);
+                    }
+                } else {
+                    sendToChannel(dependencies.selectedChannelOutRef.current);
+                }
             }
     
             // Schedule the next message send attempt
