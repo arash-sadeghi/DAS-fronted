@@ -1,16 +1,17 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { processResultMidiQueue } from '../utils/PublishResultMidi';
-import {sendMidi2Backend} from '../utils/SendMidi2Backend';
-import SelectMidiChannelIn from './MidiChannelIn'
 import SelectMidiChannelOut from './MidiChannelOut'
+import 'react-piano/dist/styles.css';
+import PianoMidi from './PinaoMidi';
 
-const RealtimeForm = () => {
+const PianoInteract = () => {
     const [midiPorts, setMidiPorts] = useState([]);
     const [selectedPortIn, setSelectedPortIn] = useState('');
     const [selectedPortOut, setSelectedPortOut] = useState('');
 	const [isRunning, setIsRunning] = useState(false);
 	const [socketState, setSocketState] = useState(null);
+	const socketStateRef = useRef(null);
 	const [midiAccess, setMidiAccess] = useState(null);
 
 	const [selectedChannelIn, setSelectedChannelIn] = useState(3);
@@ -45,12 +46,6 @@ const RealtimeForm = () => {
 	};
 	
 
-	const handleChannelChangeIn = (channel) => {
-	  setSelectedChannelIn(channel);
-	  selectedChannelInRef.current = channel;
-	  console.log("Selected MIDI Channel:", channel);
-	};
-
 	const handleChannelChangeOut = (channel) => {
 		setSelectedChannelOut(channel);
 		selectedChannelOutRef.current = channel;
@@ -61,6 +56,7 @@ const RealtimeForm = () => {
 		console.log('refreshing ws' , midiAccess)
 		const socket = io(process.env.REACT_APP_BACKEND_URL+'/realtime');
 		setSocketState(socket);
+		socketStateRef.current = socket;
 		socket.on('connect', () => {
 			console.log('connected to ',process.env.REACT_APP_BACKEND_URL);
 		});
@@ -108,61 +104,26 @@ const RealtimeForm = () => {
 		console.log('selectedPortOut changed to selectedPortOut',selectedPortOut , '<selectedPortOutRef.current>', selectedPortOutRef.current , '<e.target.value>' ,  e.target.value);
 	};
 
-	const handlePortChangeIn = (e) => {
-		setSelectedPortIn(e.target.value);
-	};
-
-	const startRealtime = async () => {
-		sendMidi2Backend(sendMidi2BackendDependencies);
-	};
-
-	const stopRealTime = () => {
-		setIsRunning(false);
-		document.getElementById('message').style.display = 'block';
-		document.getElementById('message').innerHTML = 'Real-time processing stopped!';
-		socketState.send(JSON.stringify({action: 'Stop'}));
-
-	};
-
  	return (
 		<div className="tab-content">
-		<h1>Real-time Improv</h1>
+		<h1>Piano Interact</h1>
 		<p>Recommended browser is Chrome and recommended OS is OSX</p>
+		<PianoMidi socket = {socketStateRef.current} id = "piano"/>
 		<form id="realtime-form">
-			<div className='selection-segment'>
-				<label>MIDI Input Port:</label>
-				<select name="midiin" id="midiin"  onChange={handlePortChangeIn} value={selectedPortIn} required>
-					{midiPorts.length > 0 ? (
-						midiPorts.map((port) => (
-						<option key={port.id} value={port.id}>
-							{port.name}
-						</option>
-						))
-					) : (
-						<option value="">No MIDI in ports available</option>
-					)}
+			<div className='selection-segment'>	
+				<label>MIDI Output Port:</label>
+				<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
+				{midiPorts.length > 0 ? (
+					midiPorts.map((port) => (
+					<option key={port.id} value={port.id}>
+						{port.name}
+					</option>
+					))
+				) : (
+					<option value="">No MIDI output ports available</option>
+				)}
 				</select>
-				<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
-				</div>
-				<div className='selection-segment'>	
-					<label>MIDI Output Port:</label>
-					<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
-					{midiPorts.length > 0 ? (
-						midiPorts.map((port) => (
-						<option key={port.id} value={port.id}>
-							{port.name}
-						</option>
-						))
-					) : (
-						<option value="">No MIDI output ports available</option>
-					)}
-					</select>
 				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
-				</div>
-
-			<div id='start-stop-buttons'>
-				<button type="button" onClick={startRealtime} className="button" disabled={isRunning}>Start</button> 
-				<button type="button" onClick={stopRealTime} className="button" disabled={!isRunning}>Stop</button>
 			</div>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>
@@ -170,4 +131,6 @@ const RealtimeForm = () => {
   	);
 };
 
-export default RealtimeForm;
+
+
+export default PianoInteract;

@@ -15,6 +15,13 @@ const Tabs = ({ activeTab, onTabClick }) => {
       >
         Real-time Drum Accompaniment
       </button>
+      <button
+        className={`tab-button ${activeTab === 'piano' ? 'active' : ''}`}
+        onClick={() => onTabClick('piano')}
+      >
+        Interactive MIDI Piano
+      </button>
+
     </div>
   );
 };

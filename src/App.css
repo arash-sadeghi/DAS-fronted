@@ -53,8 +53,33 @@ form {
   align-items: center;
   justify-content: center;
   width: 100%; /* Make form take the full width of the container */
+  padding: 30px;
 }
 
+.selection-segment{
+  
+  border: 2px solid #008CBA;
+  border-radius: 40px;
+  padding: 30px;
+
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+  gap: 10px; /* Add spacing between elements */
+}
+
+.selection-segment label {
+  margin-left: 10px; /* Optional: Add spacing between label and its select */
+}
+
+#start-stop-buttons{
+  border: 2px solid #008CBA;
+  border-radius: 40px;
+  padding: 30px;
+  display: flex;
+  align-items: center; /* Align items vertically in the center */
+  gap: 1px; /* Add spacing between elements */
+  width: 70%;
+}
 
 select {
   padding: 5px;
@@ -191,16 +216,14 @@ label:hover {
 
 .tab-content {
   display: block;
-  padding: 20px;
   border: 1px solid #ccc;
   margin-top: 10px;
 
   /* background-color: #fff; */
-  background-color: rgba(255, 255, 255, 0.6); /* Semi-transparent white background */
+  background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
   border-radius: 10px;
   padding: 30px;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-  width: 700px;
+  width: 60%;
   position: fixed;
   top: 200px; /* Position at the top of the viewport */
   left: 50%; /* Position at the center horizontally */
@@ -228,4 +251,10 @@ box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
 background-color: #dddddd; /* Grey background color */
 color: #999999; /* Light grey text color */
 cursor: not-allowed; /* Show disabled cursor */
+}
+
+#piano{
+  margin-top: 1000px;
+  border: 1000px;
+  padding: 100px;
 }
