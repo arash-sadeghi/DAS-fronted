@@ -129,7 +129,7 @@ const RealtimeForm = () => {
 		<h1>Real-time Improv</h1>
 		<p>Recommended browser is Chrome and recommended OS is OSX</p>
 		<form id="realtime-form">
-			<div>
+			<div className='selection-segment'>
 				<label>MIDI Input Port:</label>
 				<select name="midiin" id="midiin"  onChange={handlePortChangeIn} value={selectedPortIn} required>
 					{midiPorts.length > 0 ? (
@@ -143,9 +143,8 @@ const RealtimeForm = () => {
 					)}
 				</select>
 				<SelectMidiChannelIn onChannelChange={handleChannelChangeIn} />
-				{<p>Current MIDI In Channel: {selectedChannelIn}</p>}
 				</div>
-				<div>	
+				<div className='selection-segment'>	
 					<label>MIDI Output Port:</label>
 					<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
 					{midiPorts.length > 0 ? (
@@ -159,12 +158,12 @@ const RealtimeForm = () => {
 					)}
 					</select>
 				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
-				{<p>Current MIDI Out Channel: {selectedChannelOut}</p>}
-
 				</div>
 
-			<button type="button" onClick={startRealtime} className="button" disabled={isRunning}>Start</button> 
-			<button type="button" onClick={stopRealTime} className="button" disabled={!isRunning}>Stop</button>
+			<div id='start-stop-buttons'>
+				<button type="button" onClick={startRealtime} className="button" disabled={isRunning}>Start</button> 
+				<button type="button" onClick={stopRealTime} className="button" disabled={!isRunning}>Stop</button>
+			</div>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>
 		</div>

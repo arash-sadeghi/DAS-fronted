@@ -1,12 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { processResultMidiQueue } from '../utils/PublishResultMidi';
-import {sendPiano2backend} from '../utils/SendPiano2backend';
-import SelectMidiChannelIn from './MidiChannelIn'
 import SelectMidiChannelOut from './MidiChannelOut'
-import { Piano, KeyboardShortcuts, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
-import { Soundfont } from "smplr";
 import PianoMidi from './PinaoMidi';
 
 const PianoInteract = () => {
@@ -49,12 +45,6 @@ const PianoInteract = () => {
 		'selectedChannelInRef' : selectedChannelInRef,
 	};
 	
-
-	const handleChannelChangeIn = (channel) => {
-	  setSelectedChannelIn(channel);
-	  selectedChannelInRef.current = channel;
-	  console.log("Selected MIDI Channel:", channel);
-	};
 
 	const handleChannelChangeOut = (channel) => {
 		setSelectedChannelOut(channel);
@@ -114,29 +104,13 @@ const PianoInteract = () => {
 		console.log('selectedPortOut changed to selectedPortOut',selectedPortOut , '<selectedPortOutRef.current>', selectedPortOutRef.current , '<e.target.value>' ,  e.target.value);
 	};
 
-	const handlePortChangeIn = (e) => {
-		setSelectedPortIn(e.target.value);
-	};
-
-	const startRealtime = async () => {
-	};
-
-	const stopRealTime = () => {
-		setIsRunning(false);
-		document.getElementById('message').style.display = 'block';
-		document.getElementById('message').innerHTML = 'Real-time processing stopped!';
-		socketState.send(JSON.stringify({action: 'Stop'}));
-
-	};
-
  	return (
 		<div className="tab-content">
 		<h1>Piano Interact</h1>
 		<p>Recommended browser is Chrome and recommended OS is OSX</p>
-		<PianoMidi socket = {socketStateRef.current}/>
-		{/* {socketState && socketState.send ? <PianoMidi socketState = {{socketState : socketState}} /> : <p>Loading socket...</p>} */}
+		<PianoMidi socket = {socketStateRef.current} id = "piano"/>
 		<form id="realtime-form">
-			<div>	
+			<div className='selection-segment'>	
 				<label>MIDI Output Port:</label>
 				<select name="midiin" id="midiin"  onChange={handlePortChangeOut} value={selectedPortOut} required>
 				{midiPorts.length > 0 ? (
@@ -150,7 +124,6 @@ const PianoInteract = () => {
 				)}
 				</select>
 				<SelectMidiChannelOut onChannelChange={handleChannelChangeOut} />
-				{<p>Current MIDI Out Channel: {selectedChannelOut}</p>}
 			</div>
 		</form>
 		<p id="message" className="message" style={{ display: 'none' }}></p>

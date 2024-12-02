@@ -1,9 +1,5 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { io } from 'socket.io-client';
-import { processResultMidiQueue } from '../utils/PublishResultMidi';
+import React, { useEffect} from 'react';
 import {sendPiano2backend} from '../utils/SendPiano2backend';
-import SelectMidiChannelIn from './MidiChannelIn'
-import SelectMidiChannelOut from './MidiChannelOut'
 import { Piano, KeyboardShortcuts, MidiNumbers } from 'react-piano';
 import 'react-piano/dist/styles.css';
 import { Soundfont } from "smplr";
